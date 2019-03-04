@@ -15,11 +15,12 @@ class Main extends Actor with ActorLogging {
   val receptionist: ActorRef = context.actorOf(Props[Receptionist], "receptionist")
   context.setReceiveTimeout(10.seconds)
 
-  receptionist ! Receptionist.Get("http://www.google.com")
+  receptionist ! Receptionist.Get("https://www.amazon.com")
 
   override def receive: Receive = {
     case Receptionist.Result(url, links) =>
-      log.info(s"\n'$url' result:\n[${links.toSeq.mkString("],[")}]")
+      log.info(links.toSeq.sorted.mkString(s"'$url' results:\n", "\n", "\n"))
+    //      log.info(s"\n'$url' result:\n[${links.toSeq.mkString("],[")}]")
     case Receptionist.Failed(url) =>
       log.error(s"error fetching url '$url'")
     case ReceiveTimeout =>
