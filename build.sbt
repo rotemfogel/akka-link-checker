@@ -14,7 +14,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"  %% "akka-testkit"      % akkaVersion,
     "org.asynchttpclient" % "async-http-client" % "2.8.1",
     "org.jsoup"           % "jsoup"             % "1.11.3",
-
+    // test dependencies
     "org.scalatest"      %% "scalatest"         % "3.0.5" % Test
   )
 }

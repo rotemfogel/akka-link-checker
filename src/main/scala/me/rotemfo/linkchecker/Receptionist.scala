@@ -22,6 +22,7 @@ object Receptionist {
 class Receptionist extends Actor with ActorLogging {
 
   private val reqNo = new AtomicInteger(0)
+  protected val queueSize: Int = 3
 
   private def waiting: Receive = LoggingReceive {
     case Receptionist.Get(url) =>
@@ -29,7 +30,7 @@ class Receptionist extends Actor with ActorLogging {
   }
 
   private def enqueueJob(queue: Vector[Job], job: Job): Receive = LoggingReceive {
-    if (queue.size > 5) {
+    if (queue.size > queueSize) {
       sender ! Receptionist.Failed(job.url)
       running(queue)
     } else running(queue :+ job)
@@ -46,15 +47,16 @@ class Receptionist extends Actor with ActorLogging {
   }
 
   private def runNext(queue: Vector[Job]): Receive = LoggingReceive {
-    reqNo.incrementAndGet()
     if (queue.isEmpty) waiting
     else {
-      val controller = context.actorOf(Props[Controller], s"c${reqNo.get}")
+      reqNo.incrementAndGet()
+      val controller = context.actorOf(controllerProps, s"c${reqNo.get}")
       controller ! Controller.Check(queue.head.url, 2)
       running(queue)
     }
   }
 
+  protected def controllerProps: Props = Props[Controller]
   override def receive: Receive = waiting
 
 }
