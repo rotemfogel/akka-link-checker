@@ -6,7 +6,6 @@ import akka.testkit.TestKit
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 
 import scala.concurrent.duration._
-
 /**
   * project: link-checker
   * package: me.rotemfo.linkchecker
@@ -26,16 +25,16 @@ class ReceptionistSpec extends TestKit(ActorSystem("ReceptionistSpec")) with Wor
   "A Receptionist" must {
 
     "reply with a result" in {
-      val receptionist = system.actorOf(fakeReceptionist, "sendResults")
+      val receptionist = system.actorOf(StepParent(fakeReceptionist, testActor), "reply")
       receptionist ! Receptionist.Get(url)
       expectMsg(Receptionist.Result(url, Set(url)))
     }
 
     "reject request flood" in {
-      val receptionist = system.actorOf(fakeReceptionist, "rejectFlood")
-      for (i <- 1 to 5) receptionist ! Receptionist.Get(s"$url/$i")
-      expectMsg(Receptionist.Failed(s"$url/4"))
-      for (i <- 1 to 4) expectMsg(s"$url/$i")
+      val receptionist = system.actorOf(StepParent(fakeReceptionist, testActor), "reject")
+      for (i <- 1 to 5) receptionist ! Receptionist.Get(s"$url$i")
+      for (i <- 1 to 4) expectMsg(Receptionist.Result(s"$url$i", Set(s"$url$i")))
+      expectMsg(Receptionist.Failed(s"${url}4"))
     }
   }
 }
@@ -44,16 +43,17 @@ class ReceptionistSpec extends TestKit(ActorSystem("ReceptionistSpec")) with Wor
 object ReceptionistSpec {
 
   private class FakeController extends Actor with ActorLogging {
+    import context.dispatcher
     override def receive: Receive = LoggingReceive {
       case Controller.Check(url, depth) =>
-        log.debug("{} -> {}", url, depth)
-        import context.dispatcher
-        context.system.scheduler.scheduleOnce(100.millis, sender, Controller.Result(Set(url)))
+        log.debug("FakeController::receive ==> [{},{}]", url, depth)
+        context.system.scheduler.scheduleOnce(500.millis, sender, Controller.Result(Set(url)))
     }
   }
 
   def fakeReceptionist: Props = {
     Props(new Receptionist {
+      // override controller with fake one
       override protected def controllerProps: Props = Props[FakeController]
     })
   }

@@ -28,13 +28,16 @@ class Controller extends Actor with ActorLogging {
 
   override def receive: Receive = LoggingReceive {
     case Controller.Check(url, depth) =>
-      log.debug("{} -> {}", url, depth)
+      log.debug("Controller::receive ==> [{},{}]", url, depth)
       if (!cache(url) && depth > 0)
         children += context.actorOf(Props(new Getter(url, depth - 1)))
       cache += url
     case Getter.Done =>
       children -= sender
-      if (children.isEmpty) context.parent ! Controller.Result(cache)
+      if (children.isEmpty) {
+        log.debug("Controller::receive ==> {}", cache.mkString(","))
+        context.parent ! Controller.Result(cache)
+      }
     case ReceiveTimeout => children.foreach(_ ! Getter.Abort)
   }
 }

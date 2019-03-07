@@ -43,8 +43,10 @@ class Getter(url: String, depth: Int) extends Actor with ActorLogging {
 
   override def receive: Receive = LoggingReceive {
     case body: String =>
-      for (link <- findLinks(body))
+      for (link <- findLinks(body)) {
+        log.debug("Getter::receive ==> {}", link)
         context.parent ! Controller.Check(link, depth)
+      }
       stop()
     case Getter.Abort => stop()
     case _: Status.Failure => stop()

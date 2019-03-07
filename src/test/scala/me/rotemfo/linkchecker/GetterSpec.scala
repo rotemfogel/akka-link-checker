@@ -22,14 +22,14 @@ class GetterSpec extends TestKit(ActorSystem("GetterSpec")) with WordSpecLike wi
 
   "A Getter" must {
     "return the right body" in {
-      system.actorOf(Props(new StepParent(fakeGetter(firstLink, 2), testActor)), "rightBody")
+      system.actorOf(StepParent(fakeGetter(firstLink, 2), testActor), "rightBody")
       for (link <- links(firstLink))
         expectMsg(Controller.Check(link, 2))
       expectMsg(Getter.Done)
     }
 
     "finish properly in case of errors" in {
-      system.actorOf(Props(new StepParent(fakeGetter("unknown", 2), testActor)), "wrongLink")
+      system.actorOf(StepParent(fakeGetter("unknown", 2), testActor), "wrongLink")
       expectMsg(Getter.Done)
     }
   }

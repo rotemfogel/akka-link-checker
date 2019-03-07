@@ -16,3 +16,7 @@ class StepParent(child: Props, probe: ActorRef) extends Actor {
     case msg => probe.tell(msg, sender)
   }
 }
+
+object StepParent {
+  def apply(child: Props, probe: ActorRef): Props = Props(new StepParent(child, probe))
+}

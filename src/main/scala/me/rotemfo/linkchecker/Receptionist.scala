@@ -16,7 +16,6 @@ object Receptionist {
   case class Get(url: String)
   case class Result(url: String, links: Set[String])
   case class Failed(url: String)
-  case object Done
 }
 
 class Receptionist extends Actor with ActorLogging {
@@ -43,12 +42,14 @@ class Receptionist extends Actor with ActorLogging {
       context.stop(sender)
       context.become(runNext(queue.tail))
     case Receptionist.Get(url) =>
+      log.debug("Receptionist::running ==> {}", url)
       context.become(enqueueJob(queue, Job(sender, url)))
   }
 
   private def runNext(queue: Vector[Job]): Receive = LoggingReceive {
     if (queue.isEmpty) waiting
     else {
+      log.debug("Receptionist::runNext ==> {}", queue.head.url)
       reqNo.incrementAndGet()
       val controller = context.actorOf(controllerProps, s"c${reqNo.get}")
       controller ! Controller.Check(queue.head.url, 2)
