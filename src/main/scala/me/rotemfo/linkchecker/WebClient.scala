@@ -13,10 +13,16 @@ import scala.concurrent.{Future, Promise}
   * created: 2019-03-04
   * author:  rotem
   */
-object WebClient {
+trait WebClient {
+  def get(url: String)(implicit executor: Executor): Future[String]
+
+  def shutdown(): Unit
+}
+
+object AsyncWebClient extends WebClient {
   val client = new DefaultAsyncHttpClient
 
-  def get(url: String)(implicit executor: Executor): Future[String] = {
+  override def get(url: String)(implicit executor: Executor): Future[String] = {
     try {
       val f = client.prepareGet(url).execute()
       val p = Promise[String]()
@@ -34,7 +40,7 @@ object WebClient {
     }
   }
 
-  def shutdown(): Unit = {
+  override def shutdown(): Unit = {
     client.close()
   }
 }

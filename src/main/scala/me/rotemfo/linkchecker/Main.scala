@@ -14,6 +14,7 @@ import scala.concurrent.duration._
 class Main extends Actor with ActorLogging {
   val receptionist: ActorRef = context.actorOf(Props[Receptionist], "receptionist")
   context.setReceiveTimeout(10.seconds)
+  val webClient: WebClient = AsyncWebClient
 
   receptionist ! Receptionist.Get("https://www.amazon.com")
 
@@ -28,6 +29,6 @@ class Main extends Actor with ActorLogging {
   }
 
   override def postStop(): Unit = {
-    WebClient.shutdown()
+    webClient.shutdown()
   }
 }
