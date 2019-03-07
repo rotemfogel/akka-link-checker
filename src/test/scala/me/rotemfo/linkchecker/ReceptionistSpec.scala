@@ -1,6 +1,6 @@
 package me.rotemfo.linkchecker
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Props, ReceiveTimeout}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.testkit.TestKit
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
@@ -35,6 +35,7 @@ class ReceptionistSpec extends TestKit(ActorSystem("ReceptionistSpec")) with Wor
       val receptionist = system.actorOf(fakeReceptionist, "rejectFlood")
       for (i <- 1 to 5) receptionist ! Receptionist.Get(s"$url/$i")
       expectMsg(Receptionist.Failed(s"$url/4"))
+      for (i <- 1 to 4) expectMsg(s"$url/$i")
     }
   }
 }
