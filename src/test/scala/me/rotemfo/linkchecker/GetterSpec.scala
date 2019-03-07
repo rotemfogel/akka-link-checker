@@ -19,16 +19,17 @@ class GetterSpec extends TestKit(ActorSystem("GetterSpec")) with WordSpecLike wi
 
   import MockWebClient._
 
-  "return the right body" in {
-    system.actorOf(Props(new StepParent(FakeGetter(firstLink, 2), testActor)), "rightBody")
-    for (link <- links(firstLink))
-      expectMsg(Controller.Check(link, 2))
-    expectMsg(Getter.Done)
-  }
+  "A Getter" must {
+    "return the right body" in {
+      system.actorOf(Props(new StepParent(FakeGetter(firstLink, 2), testActor)), "rightBody")
+      for (link <- links(firstLink))
+        expectMsg(Controller.Check(link, 2))
+      expectMsg(Getter.Done)
+    }
 
-  "finish properly in case of errors" in {
-    system.actorOf(Props(new StepParent(FakeGetter("unknown", 2), testActor)), "wrongLink")
-    expectMsg(Getter.Done)
+    "finish properly in case of errors" in {
+      system.actorOf(Props(new StepParent(FakeGetter("unknown", 2), testActor)), "wrongLink")
+      expectMsg(Getter.Done)
+    }
   }
-
 }
