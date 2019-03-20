@@ -15,11 +15,10 @@ import scala.concurrent.{Future, Promise}
   */
 trait WebClient {
   def get(url: String)(implicit executor: Executor): Future[String]
-
   def shutdown(): Unit
 }
 
-object AsyncWebClient extends WebClient {
+class AsyncWebClient extends WebClient {
   val client = new DefaultAsyncHttpClient
 
   override def get(url: String)(implicit executor: Executor): Future[String] = {

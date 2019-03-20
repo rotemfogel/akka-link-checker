@@ -13,10 +13,15 @@ import scala.concurrent.duration._
   */
 class Main extends Actor with ActorLogging {
   val receptionist: ActorRef = context.actorOf(Props[Receptionist], "receptionist")
+  context.watch(receptionist)
+
   context.setReceiveTimeout(10.seconds)
-  val webClient: WebClient = AsyncWebClient
 
   receptionist ! Receptionist.Get("https://www.amazon.com")
+  receptionist ! Receptionist.Get("https://www.google.com/1")
+  receptionist ! Receptionist.Get("https://www.google.com/2")
+  receptionist ! Receptionist.Get("https://www.google.com/3")
+  receptionist ! Receptionist.Get("https://www.google.com/4")
 
   override def receive: Receive = {
     case Receptionist.Result(url, links) =>
@@ -26,9 +31,5 @@ class Main extends Actor with ActorLogging {
       log.error(s"error fetching url '$url'")
     case ReceiveTimeout =>
       context.stop(self)
-  }
-
-  override def postStop(): Unit = {
-    webClient.shutdown()
   }
 }

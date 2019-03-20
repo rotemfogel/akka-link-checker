@@ -2,7 +2,7 @@ package me.rotemfo.linkchecker
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, Props, SupervisorStrategy, Terminated}
 import akka.event.LoggingReceive
 
 /**
@@ -23,6 +23,8 @@ class Receptionist extends Actor with ActorLogging {
   private val reqNo = new AtomicInteger(0)
   protected val queueSize: Int = 3
 
+  override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
+
   private def waiting: Receive = LoggingReceive {
     case Receptionist.Get(url) =>
       context.become(runNext(Vector(Job(sender, url))))
@@ -39,8 +41,11 @@ class Receptionist extends Actor with ActorLogging {
     case Controller.Result(links) =>
       val job = queue.head
       job.client ! Receptionist.Result(job.url, links)
-      context.stop(sender)
-      reqNo.decrementAndGet()
+      context.stop(context.unwatch(sender))
+      context.become(runNext(queue.tail))
+    case Terminated(_) =>
+      val job = queue.head
+      job.client ! Receptionist.Failed(job.url)
       context.become(runNext(queue.tail))
     case Receptionist.Get(url) =>
       log.debug("Receptionist::running ==> {}", url)
@@ -53,6 +58,7 @@ class Receptionist extends Actor with ActorLogging {
       log.debug("Receptionist::runNext ==> {}", queue.head.url)
       reqNo.incrementAndGet()
       val controller = context.actorOf(controllerProps, s"c${reqNo.get}")
+      context.watch(controller)
       controller ! Controller.Check(queue.head.url, 2)
       running(queue)
     }
