@@ -26,7 +26,13 @@ object MockWebClient extends WebClient {
          |     <a href="$secondLink"
          |   </body>
          |</html>
-    """.stripMargin
+    """.stripMargin,
+    secondLink ->
+      s"""
+         |<html>
+         |   <head><title>Page 1</title></head>
+         |</html>
+    """
   )
 
   final val links = Map(firstLink -> Seq(secondLink))

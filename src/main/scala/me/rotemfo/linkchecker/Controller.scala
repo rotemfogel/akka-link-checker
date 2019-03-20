@@ -1,6 +1,6 @@
 package me.rotemfo.linkchecker
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, ReceiveTimeout}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, ReceiveTimeout, SupervisorStrategy}
 import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
@@ -25,6 +25,10 @@ class Controller extends Actor with ActorLogging {
 
   var cache = Set.empty[String]
   var children = Set.empty[ActorRef]
+
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 5) {
+    case _: Exception => SupervisorStrategy.restart
+  }
 
   override def receive: Receive = LoggingReceive {
     case Controller.Check(url, depth) =>

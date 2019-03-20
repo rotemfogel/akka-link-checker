@@ -40,6 +40,7 @@ class Receptionist extends Actor with ActorLogging {
       val job = queue.head
       job.client ! Receptionist.Result(job.url, links)
       context.stop(sender)
+      reqNo.decrementAndGet()
       context.become(runNext(queue.tail))
     case Receptionist.Get(url) =>
       log.debug("Receptionist::running ==> {}", url)

@@ -36,6 +36,7 @@ class ReceptionistSpec extends TestKit(ActorSystem("ReceptionistSpec")) with Wor
       for (i <- 1 to 4) expectMsg(Receptionist.Result(s"$url$i", Set(s"$url$i")))
       expectMsg(Receptionist.Failed(s"${url}4"))
     }
+
   }
 }
 
