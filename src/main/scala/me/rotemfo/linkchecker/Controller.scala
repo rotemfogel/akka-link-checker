@@ -1,6 +1,6 @@
 package me.rotemfo.linkchecker
 
-import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, ReceiveTimeout, SupervisorStrategy}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, ReceiveTimeout, SupervisorStrategy, Terminated}
 import akka.event.LoggingReceive
 
 import scala.concurrent.duration._
@@ -19,12 +19,13 @@ object Controller {
   case object Failed
 }
 
+import me.rotemfo.linkchecker.Getter.getterProps
+
 class Controller extends Actor with ActorLogging {
 
   context.setReceiveTimeout(10.seconds)
 
   var cache = Set.empty[String]
-  var children = Set.empty[ActorRef]
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 5) {
     case _: Exception => SupervisorStrategy.restart
@@ -34,14 +35,13 @@ class Controller extends Actor with ActorLogging {
     case Controller.Check(url, depth) =>
       log.debug("Controller::receive ==> [{},{}]", url, depth)
       if (!cache(url) && depth > 0)
-        children += context.actorOf(Props(new Getter(url, depth - 1)))
+        context.watch(context.actorOf(getterProps(url, depth - 1)))
       cache += url
-    case Getter.Done =>
-      children -= sender
-      if (children.isEmpty) {
+    case Terminated(_) =>
+      if (context.children.isEmpty) {
         log.debug("Controller::receive ==> {}", cache.mkString(","))
         context.parent ! Controller.Result(cache)
       }
-    case ReceiveTimeout => children.foreach(_ ! Getter.Abort)
+    case ReceiveTimeout => context.children.foreach(context.stop)
   }
 }

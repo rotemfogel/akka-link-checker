@@ -1,6 +1,6 @@
 package me.rotemfo.linkchecker
 
-import akka.actor.{Actor, ActorLogging, Status}
+import akka.actor.{Actor, ActorLogging, Props, Status}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import org.jsoup.Jsoup
@@ -16,6 +16,10 @@ import scala.concurrent.ExecutionContextExecutor
 object Getter {
   case object Abort
   case object Done
+
+  def getterProps(url: String, depth: Int): Props = {
+    Props(new Getter(url, depth))
+  }
 }
 
 class Getter(url: String, depth: Int) extends Actor with ActorLogging {
